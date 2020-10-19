@@ -32,12 +32,13 @@
             this.sourseImgBox = new Emgu.CV.UI.ImageBox();
             this.LoadImageBut = new System.Windows.Forms.Button();
             this.resultImgBox = new Emgu.CV.UI.ImageBox();
-            this.GrayImageBut = new System.Windows.Forms.Button();
             this.ShowOriginImgBut = new System.Windows.Forms.Button();
             this.cannyThresholdScrl = new System.Windows.Forms.TrackBar();
             this.cannyThresholdLinkingScrl = new System.Windows.Forms.TrackBar();
-            this.KannyFilterCheckBox = new System.Windows.Forms.CheckBox();
-            this.checkBoxFlatColors = new System.Windows.Forms.CheckBox();
+            this.CannyFilterCheckBox = new System.Windows.Forms.CheckBox();
+            this.FlatColorsCheckBox = new System.Windows.Forms.CheckBox();
+            this.LoadVideoBut = new System.Windows.Forms.Button();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.sourseImgBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.resultImgBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cannyThresholdScrl)).BeginInit();
@@ -70,16 +71,6 @@
             this.resultImgBox.TabIndex = 2;
             this.resultImgBox.TabStop = false;
             // 
-            // GrayImageBut
-            // 
-            this.GrayImageBut.Location = new System.Drawing.Point(118, 499);
-            this.GrayImageBut.Name = "GrayImageBut";
-            this.GrayImageBut.Size = new System.Drawing.Size(100, 29);
-            this.GrayImageBut.TabIndex = 5;
-            this.GrayImageBut.Text = "Gray Image";
-            this.GrayImageBut.UseVisualStyleBackColor = true;
-            this.GrayImageBut.Click += new System.EventHandler(this.GrayImageBut_Click);
-            // 
             // ShowOriginImgBut
             // 
             this.ShowOriginImgBut.Location = new System.Drawing.Point(12, 534);
@@ -98,7 +89,7 @@
             this.cannyThresholdScrl.Size = new System.Drawing.Size(1195, 45);
             this.cannyThresholdScrl.TabIndex = 7;
             this.cannyThresholdScrl.Value = 20;
-            this.cannyThresholdScrl.Scroll += new System.EventHandler(this.cannyThresholdScrl_Scroll);
+            this.cannyThresholdScrl.Scroll += new System.EventHandler(this.CannyThresholdScrl_Scroll);
             // 
             // cannyThresholdLinkingScrl
             // 
@@ -108,41 +99,56 @@
             this.cannyThresholdLinkingScrl.Size = new System.Drawing.Size(1195, 45);
             this.cannyThresholdLinkingScrl.TabIndex = 8;
             this.cannyThresholdLinkingScrl.Value = 30;
-            this.cannyThresholdLinkingScrl.Scroll += new System.EventHandler(this.cannyThresholdLinkingScrl_Scroll);
+            this.cannyThresholdLinkingScrl.Scroll += new System.EventHandler(this.CannyThresholdLinkingScrl_Scroll);
             // 
-            // KannyFilterCheckBox
+            // CannyFilterCheckBox
             // 
-            this.KannyFilterCheckBox.AutoSize = true;
-            this.KannyFilterCheckBox.Location = new System.Drawing.Point(224, 506);
-            this.KannyFilterCheckBox.Name = "KannyFilterCheckBox";
-            this.KannyFilterCheckBox.Size = new System.Drawing.Size(81, 17);
-            this.KannyFilterCheckBox.TabIndex = 9;
-            this.KannyFilterCheckBox.Text = "Kanny Filter";
-            this.KannyFilterCheckBox.UseVisualStyleBackColor = true;
-            this.KannyFilterCheckBox.CheckedChanged += new System.EventHandler(this.KannyFilterCheckBox_CheckedChanged);
+            this.CannyFilterCheckBox.AutoSize = true;
+            this.CannyFilterCheckBox.Location = new System.Drawing.Point(123, 506);
+            this.CannyFilterCheckBox.Name = "CannyFilterCheckBox";
+            this.CannyFilterCheckBox.Size = new System.Drawing.Size(81, 17);
+            this.CannyFilterCheckBox.TabIndex = 9;
+            this.CannyFilterCheckBox.Text = "Canny Filter";
+            this.CannyFilterCheckBox.UseVisualStyleBackColor = true;
+            this.CannyFilterCheckBox.CheckedChanged += new System.EventHandler(this.CannyFilterCheckBox_CheckedChanged);
             // 
-            // checkBoxFlatColors
+            // FlatColorsCheckBox
             // 
-            this.checkBoxFlatColors.AutoSize = true;
-            this.checkBoxFlatColors.Location = new System.Drawing.Point(311, 506);
-            this.checkBoxFlatColors.Name = "checkBoxFlatColors";
-            this.checkBoxFlatColors.Size = new System.Drawing.Size(75, 17);
-            this.checkBoxFlatColors.TabIndex = 10;
-            this.checkBoxFlatColors.Text = "Flat Colors";
-            this.checkBoxFlatColors.UseVisualStyleBackColor = true;
-            this.checkBoxFlatColors.CheckedChanged += new System.EventHandler(this.checkBoxFlatColors_CheckedChanged);
+            this.FlatColorsCheckBox.AutoSize = true;
+            this.FlatColorsCheckBox.Location = new System.Drawing.Point(210, 506);
+            this.FlatColorsCheckBox.Name = "FlatColorsCheckBox";
+            this.FlatColorsCheckBox.Size = new System.Drawing.Size(75, 17);
+            this.FlatColorsCheckBox.TabIndex = 10;
+            this.FlatColorsCheckBox.Text = "Flat Colors";
+            this.FlatColorsCheckBox.UseVisualStyleBackColor = true;
+            this.FlatColorsCheckBox.CheckedChanged += new System.EventHandler(this.CheckBoxFlatColors_CheckedChanged);
+            // 
+            // LoadVideoBut
+            // 
+            this.LoadVideoBut.Location = new System.Drawing.Point(12, 588);
+            this.LoadVideoBut.Name = "LoadVideoBut";
+            this.LoadVideoBut.Size = new System.Drawing.Size(100, 42);
+            this.LoadVideoBut.TabIndex = 11;
+            this.LoadVideoBut.Text = "Load Video";
+            this.LoadVideoBut.UseVisualStyleBackColor = true;
+            this.LoadVideoBut.Click += new System.EventHandler(this.LoadVideoBut_Click);
+            // 
+            // timer1
+            // 
+            this.timer1.Interval = 33;
+            this.timer1.Tick += new System.EventHandler(this.Timer1_Tick);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1326, 639);
-            this.Controls.Add(this.checkBoxFlatColors);
-            this.Controls.Add(this.KannyFilterCheckBox);
+            this.Controls.Add(this.LoadVideoBut);
+            this.Controls.Add(this.FlatColorsCheckBox);
+            this.Controls.Add(this.CannyFilterCheckBox);
             this.Controls.Add(this.cannyThresholdLinkingScrl);
             this.Controls.Add(this.cannyThresholdScrl);
             this.Controls.Add(this.ShowOriginImgBut);
-            this.Controls.Add(this.GrayImageBut);
             this.Controls.Add(this.resultImgBox);
             this.Controls.Add(this.LoadImageBut);
             this.Controls.Add(this.sourseImgBox);
@@ -162,12 +168,13 @@
         private Emgu.CV.UI.ImageBox sourseImgBox;
         private System.Windows.Forms.Button LoadImageBut;
         private Emgu.CV.UI.ImageBox resultImgBox;
-        private System.Windows.Forms.Button GrayImageBut;
         private System.Windows.Forms.Button ShowOriginImgBut;
         private System.Windows.Forms.TrackBar cannyThresholdScrl;
         private System.Windows.Forms.TrackBar cannyThresholdLinkingScrl;
-        private System.Windows.Forms.CheckBox KannyFilterCheckBox;
-        private System.Windows.Forms.CheckBox checkBoxFlatColors;
+        private System.Windows.Forms.CheckBox CannyFilterCheckBox;
+        private System.Windows.Forms.CheckBox FlatColorsCheckBox;
+        private System.Windows.Forms.Button LoadVideoBut;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 

@@ -13,61 +13,81 @@ namespace Lab1
 {
     static class Filters
     {
-        public static double cannyThreshold { get; set; } = 20.0;
-        public static double cannyThresholdLinking { get; set; } = 30.0;
+        public static double CannyThreshold { get; set; } = 20.0;
+        public static double CannyThresholdLinking { get; set; } = 30.0;
 
-        public static Image<Bgr, byte> LoadImage()
+        private static Image<Bgr, byte> SourceImage = null;
+        private static Image<Bgr, byte> ResultImage = null;
+        private static VideoCapture Capture = null;
+        private static int FrameCounter = 0;
+
+        // upload image
+        public static Image<Bgr, byte> UploadImage()
         {
-            Image<Bgr, byte> sourceImage = null;
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = ("Файлы изображений | *.jpg; *.jpeg; *.png")
+            };
 
-            OpenFileDialog openFileDialog = new OpenFileDialog();
+            var result = openFileDialog.ShowDialog(); // открытие диалога выбора файла
 
-            var result = openFileDialog.ShowDialog();
-
-            if (result == DialogResult.OK)
+            if (result == DialogResult.OK) // открытие выбранного файла
             {
                 string fileName = openFileDialog.FileName;
-                sourceImage = new Image<Bgr, byte>(fileName);
+                SourceImage = new Image<Bgr, byte>(fileName).Resize(640, 480, Inter.Linear);
             }
 
-            return sourceImage;
+            return SourceImage.Copy();
         }
 
-        public static Image<Gray, byte> DoGrayImage(Image<Bgr, byte> sourceImage)
+        // upload video
+        public static VideoCapture UploadVideo()
         {
-            //Image<Gray, byte> grayImage = sourceImage.Convert<Gray, byte>();
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = ("Файлы видео | *.mp4; *.webm; *.avi; *.mpg; *.mp2; *.mpeg; *.mov; *.wmv")
+            };
 
-            //var tempImage = grayImage.PyrDown();
-            //var destImage = tempImage.PyrUp();
+            var result = openFileDialog.ShowDialog(); // открытие диалога выбора файла
 
-            //return destImage;
-            return sourceImage.Convert<Gray, byte>();
+            if (result == DialogResult.OK) // открытие выбранного файла
+            {
+                string fileName = openFileDialog.FileName;
+                Capture = new VideoCapture(fileName);
+            }
+
+            return Capture;
         }
 
-        public static Image<Gray, byte> KannyFilter(Image<Bgr, byte> sourceImage)
+        // do gray image
+        public static Image<Gray, byte> DoGrayImage(Image<Bgr, byte> image)
         {
-            Image<Gray, byte> grayImage = sourceImage.Convert<Gray, byte>();
+            return image.Convert<Gray, byte>();
+        }
+
+        // Canny filter (white edges on a black background)
+        public static Image<Gray, byte> CannyFilter(Image<Bgr, byte> image)
+        {
+            Image<Gray, byte> grayImage = DoGrayImage(image);
 
             var tempImage = grayImage.PyrDown();
             var destImage = tempImage.PyrUp();
 
-            Image<Gray, byte> cannyEdges = destImage.Canny(cannyThreshold, cannyThresholdLinking);
+            Image<Gray, byte> cannyEdges = destImage.Canny(CannyThreshold, CannyThresholdLinking);
 
-            //return sourceImage.Sub(cannyEdges.Convert<Bgr, byte>());
             return cannyEdges;
         }
 
-        public static Image<Bgr, byte> FlatColors(Image<Bgr, byte> sourceImage)
+        // make flat colors
+        public static Image<Bgr, byte> FlatColors(Image<Bgr, byte> image)
         {
-            Image<Bgr, byte> resultImage = sourceImage;
-
-            for (int channel = 0; channel < resultImage.NumberOfChannels; channel++)
+            for (int channel = 0; channel < image.NumberOfChannels; channel++)
             {
-                for(int y = 0; y < resultImage.Height; y++)
+                for(int y = 0; y < image.Height; y++)
                 {
-                    for(int x = 0; x < resultImage.Width; x++)
+                    for(int x = 0; x < image.Width; x++)
                     {
-                        byte color = resultImage.Data[y, x, channel];
+                        byte color = image.Data[y, x, channel];
 
                         if (color <= 50)
                             color = 0;
@@ -80,11 +100,19 @@ namespace Lab1
                         else
                             color = 255;
 
-                        resultImage.Data[y, x, channel] = color;
+                        image.Data[y, x, channel] = color;
                     }
                 }
             }
-            return resultImage;
+            return image;
+        }
+
+        public static Image<Bgr, byte> FlatCellShading(Image<Bgr, byte> image)
+        {
+            Image<Bgr, byte> cannyEdges = CannyFilter(image.Copy()).Convert<Bgr, byte>();
+            Image<Bgr, byte> flatColors = FlatColors(image.Copy());
+
+            return flatColors.Sub(cannyEdges);
         }
     }
 }

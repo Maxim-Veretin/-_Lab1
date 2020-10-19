@@ -18,146 +18,181 @@ namespace Lab1
     {
         private Image<Bgr, byte> sourceImage;
         private Image<Bgr, byte> resultImage;
+        private VideoCapture capture;
+        private int frameCounter = 0;
 
         public Form1()
         {
             InitializeComponent();
         }
 
+        // image upload button logic
         private void LoadImageBut_Click(object sender, EventArgs e)
         {
-            sourceImage = Filters.LoadImage().Resize(640, 480, Inter.Linear);
-            sourseImgBox.Image = sourceImage;
+            sourceImage = Filters.UploadImage();
 
-            if (KannyFilterCheckBox.Checked)
+            if (CannyFilterCheckBox.Checked)
             {
-                resultImage = sourceImage.Sub(Filters.KannyFilter(sourceImage).Convert<Bgr, byte>());
-
-                if (checkBoxFlatColors.Checked)
+                if (FlatColorsCheckBox.Checked)
                 {
-                    resultImgBox.Image = Filters.FlatColors(resultImage.Copy());
+                    resultImgBox.Image = Filters.FlatCellShading(sourceImage.Copy());
                 }
                 else
-                    resultImgBox.Image = resultImage;
+                    resultImgBox.Image = Filters.CannyFilter(sourceImage.Copy());
             }
-            else if (checkBoxFlatColors.Checked)
+            else if (FlatColorsCheckBox.Checked)
             {
-                resultImage = Filters.FlatColors(sourceImage.Copy());
-                resultImgBox.Image = resultImage;
-            }
-        }
-
-        private void GrayImageBut_Click(object sender, EventArgs e)
-        {
-            if (sourceImage != null)
-            {
-                resultImgBox.Image = Filters.DoGrayImage(sourceImage);
+                resultImgBox.Image = Filters.FlatColors(sourceImage.Copy());
             }
             else
-                MessageBox.Show("Load any image before press this button.");
+                sourseImgBox.Image = sourceImage;
+        }
+
+        // video upload button logic
+        private void LoadVideoBut_Click(object sender, EventArgs e)
+        {
+            capture = Filters.UploadVideo();
+
+            timer1.Interval = (int)Math.Round(capture.GetCaptureProperty(CapProp.Fps));
+            timer1.Enabled = true;
+        }
+
+        // what to do in one tick of timer1
+        private void Timer1_Tick(object sender, EventArgs e)
+        {
+            var frame = capture.QueryFrame();
+            sourceImage = frame.ToImage<Bgr, byte>().Resize(640, 480, Inter.Linear).Copy();
+
+            if (CannyFilterCheckBox.Checked)
+            {
+                if (FlatColorsCheckBox.Checked)
+                {
+                    resultImgBox.Image = Filters.FlatCellShading(sourceImage.Copy());
+                }
+                else
+                    resultImgBox.Image = Filters.CannyFilter(sourceImage.Copy());
+            }
+            else if (FlatColorsCheckBox.Checked)
+            {
+                resultImgBox.Image = Filters.FlatColors(sourceImage.Copy());
+            }
+            else
+                resultImgBox.Image = sourceImage;
+
+            frameCounter++;
+
+            if (frameCounter >= capture.GetCaptureProperty(CapProp.FrameCount))
+            {
+                timer1.Enabled = false;
+                resultImgBox.Image = null;
+            }
         }
 
         private void ShowOriginImgBut_Click(object sender, EventArgs e)
         {
             if (sourceImage != null)
             {
-                KannyFilterCheckBox.Checked = false;
-                checkBoxFlatColors.Checked = false;
+                CannyFilterCheckBox.Checked = false;
+                FlatColorsCheckBox.Checked = false;
                 resultImgBox.Image = sourceImage;
             }
             else
                 MessageBox.Show("Load any image before press this button.");
         }
 
-        private void cannyThresholdScrl_Scroll(object sender, EventArgs e)
+        private void CannyThresholdScrl_Scroll(object sender, EventArgs e)
         {
-            if (KannyFilterCheckBox.Checked)
-            {
-                Filters.cannyThreshold = cannyThresholdScrl.Value;
-                resultImage = sourceImage.Sub(Filters.KannyFilter(sourceImage).Convert<Bgr, byte>());
+            Filters.CannyThreshold = cannyThresholdScrl.Value;
 
-                if (checkBoxFlatColors.Checked)
-                {
-                    resultImgBox.Image = Filters.FlatColors(resultImage.Copy());
-                }
-                else
-                    resultImgBox.Image = resultImage;
-            }
-            else
-                Filters.cannyThreshold = cannyThresholdScrl.Value;
-        }
-
-        private void cannyThresholdLinkingScrl_Scroll(object sender, EventArgs e)
-        {
-            if (KannyFilterCheckBox.Checked)
-            {
-                Filters.cannyThresholdLinking = cannyThresholdLinkingScrl.Value;
-                resultImage = sourceImage.Sub(Filters.KannyFilter(sourceImage).Convert<Bgr, byte>());
-
-                if (checkBoxFlatColors.Checked)
-                {
-                    resultImgBox.Image = Filters.FlatColors(resultImage.Copy());
-                }
-                else
-                    resultImgBox.Image = resultImage;
-            }
-            else
-                Filters.cannyThresholdLinking = cannyThresholdLinkingScrl.Value;
-        }
-
-        private void KannyFilterCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
             if (sourceImage != null)
             {
-                if (KannyFilterCheckBox.Checked)
+                if (CannyFilterCheckBox.Checked)
                 {
-                    resultImage = sourceImage.Sub(Filters.KannyFilter(sourceImage).Convert<Bgr, byte>());
-
-                    if (checkBoxFlatColors.Checked)
+                    if (FlatColorsCheckBox.Checked)
                     {
-                        resultImgBox.Image = Filters.FlatColors(resultImage.Copy());
+                        // display the sell shading + flat colors image
+                        resultImgBox.Image = Filters.FlatCellShading(sourceImage.Copy());
                     }
                     else
-                        resultImgBox.Image = resultImage;
+                        // display the Canny edges image
+                        resultImgBox.Image = Filters.CannyFilter(sourceImage.Copy());
+                }
+            }
+        }
+
+        private void CannyThresholdLinkingScrl_Scroll(object sender, EventArgs e)
+        {
+            Filters.CannyThresholdLinking = cannyThresholdLinkingScrl.Value;
+
+            if (sourceImage != null)
+            {
+                if (CannyFilterCheckBox.Checked)
+                {
+                    if (FlatColorsCheckBox.Checked)
+                    {
+                        // display the sell shading + flat colors image
+                        resultImgBox.Image = Filters.FlatCellShading(sourceImage.Copy());
+                    }
+                    else
+                        // display the Canny edges image
+                        resultImgBox.Image = Filters.CannyFilter(sourceImage.Copy());
+                }
+            }
+        }
+
+        private void CannyFilterCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            // if we have source image
+            if (sourceImage != null)
+            {
+                if (CannyFilterCheckBox.Checked)
+                {
+                    if (FlatColorsCheckBox.Checked)
+                    {
+                        // display the sell shading + flat colors image
+                        resultImgBox.Image = Filters.FlatCellShading(sourceImage.Copy());
+                    }
+                    else
+                        // display the Canny edges image
+                        resultImgBox.Image = Filters.CannyFilter(sourceImage.Copy());
+                }
+                else if (FlatColorsCheckBox.Checked)
+                {
+                    // display the flat colors image
+                    resultImgBox.Image = Filters.FlatColors(sourceImage.Copy());
                 }
                 else
+                    // display the source image
+                    resultImgBox.Image = sourceImage;
+            }
+        }
+
+        private void CheckBoxFlatColors_CheckedChanged(object sender, EventArgs e)
+        {
+            // if we have source image
+            if (sourceImage != null)
+            {
+                if (FlatColorsCheckBox.Checked)
                 {
-                    if (checkBoxFlatColors.Checked)
+                    if (CannyFilterCheckBox.Checked)
                     {
+                        // display the sell shading + flat colors image
+                        resultImgBox.Image = Filters.FlatCellShading(sourceImage.Copy());
+                    }
+                    else
+                    {
+                        // display the flat colors image
                         resultImgBox.Image = Filters.FlatColors(sourceImage.Copy());
                     }
-                    else
-                        resultImgBox.Image = sourceImage;
                 }
-            }
-        }
-
-        private void checkBoxFlatColors_CheckedChanged(object sender, EventArgs e)
-        {
-            if (sourceImage != null)
-            {
-                if (checkBoxFlatColors.Checked)
+                else if (CannyFilterCheckBox.Checked)
                 {
-                    if (KannyFilterCheckBox.Checked)
-                    {
-                        resultImage = sourceImage.Sub(Filters.KannyFilter(sourceImage).Convert<Bgr, byte>());
-                        resultImgBox.Image = Filters.FlatColors(resultImage.Copy());
-                    }
-                    else
-                    {
-                        resultImage = Filters.FlatColors(sourceImage.Copy());
-                        resultImgBox.Image = resultImage;
-                    }
+                    // display the Canny edges image
+                    resultImgBox.Image = Filters.CannyFilter(sourceImage.Copy());
                 }
                 else
-                {
-                    if (KannyFilterCheckBox.Checked)
-                    {
-                        resultImgBox.Image = sourceImage.Sub(Filters.KannyFilter(sourceImage).Convert<Bgr, byte>());
-                    }
-                    else
-                        resultImgBox.Image = sourceImage;
-                }
+                    // display the source image
+                    resultImgBox.Image = sourceImage;
             }
         }
     }
